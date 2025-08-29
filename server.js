@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -19,24 +20,23 @@ function processInputData(data) {
   let sum = 0;
   let allLetters = '';
 
-  // Process each item in the data array
   data.forEach(item => {
     if (typeof item === 'string') {
-      // Check if it's a letter
-      if (/^[a-zA-Z]$/.test(item)) {
+      if (/^[a-zA-Z]+$/.test(item)) {
+        // full words allowed, convert to uppercase
         alphabets.push(item.toUpperCase());
-        allLetters += item;
-      } else if (/^[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]$/.test(item)) {
-        specialChars.push(item);
-      } else if (!isNaN(item) && item.trim() !== '') {
-        // Check if string can be converted to a number
+        allLetters += item; // keep original case for concat string
+      } else if (/^[0-9]+$/.test(item)) {
         const num = Number(item);
         if (num % 2 === 0) {
-          even.push(num.toString());
+          even.push(item);
         } else {
-          odd.push(num.toString());
+          odd.push(item);
         }
         sum += num;
+      } else {
+        // treat as special char(s)
+        specialChars.push(item);
       }
     } else if (typeof item === 'number') {
       if (item % 2 === 0) {
@@ -48,21 +48,18 @@ function processInputData(data) {
     }
   });
 
-  // Create concat_string with alternating caps
+  // Create concat_string (reverse order, alternating caps)
+  let reversed = allLetters.split('').reverse().join('');
   let concatString = '';
-  for (let i = 0; i < allLetters.length; i++) {
-    if (i % 2 === 0) {
-      concatString += allLetters[i].toUpperCase();
-    } else {
-      concatString += allLetters[i].toLowerCase();
-    }
+  for (let i = 0; i < reversed.length; i++) {
+    concatString += i % 2 === 0 ? reversed[i].toUpperCase() : reversed[i].toLowerCase();
   }
 
   return {
-    even,
-    odd,
+    even_numbers: even,
+    odd_numbers: odd,
     alphabets,
-    special_chars: specialChars,
+    special_characters: specialChars,
     sum: sum.toString(),
     concat_string: concatString
   };
@@ -71,31 +68,28 @@ function processInputData(data) {
 // POST route /bfhl
 app.post('/bfhl', (req, res) => {
   try {
-    const { data, full_name, email, roll_number } = req.body;
+    const { data } = req.body;
 
-    // Validate required fields
-    if (!data || !Array.isArray(data) || !full_name || !email || !roll_number) {
+    if (!data || !Array.isArray(data)) {
       return res.status(400).json({
         is_success: false,
         status: "error",
-        message: "Missing required fields: data (array), full_name, email, roll_number"
+        message: "Missing required field: data (array)"
       });
     }
 
-    // Generate user_id in format: full_name_ddmmyyyy
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    const user_id = `${full_name.toLowerCase().replace(/\s+/g, '_')}_${day}${month}${year}`;
+    // Fixed user details (as per assignment spec)
+    const full_name = "john_doe";
+    const dob = "17091999"; // example DOB, replace with yours
+    const email = "john@xyz.com";
+    const roll_number = "ABCD123";
 
-    // Process the input data
+    const user_id = `${full_name}_${dob}`;
+
     const processedData = processInputData(data);
 
-    // Return success response
     res.status(200).json({
       is_success: true,
-      status: "success",
       user_id,
       email,
       roll_number,
@@ -112,8 +106,13 @@ app.post('/bfhl', (req, res) => {
   }
 });
 
-// Health check route
+// Serve the frontend HTML file
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Health check route
+app.get('/health', (req, res) => {
   res.json({
     message: 'BFHL API is running',
     status: 'success',
@@ -123,8 +122,8 @@ app.get('/', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`API endpoint: http://localhost:${PORT}/bfhl`);
+  console.log(`✅ Server is running on port ${PORT}`);
+  console.log(`🔗 API endpoint: http://localhost:${PORT}/bfhl`);
 });
 
 module.exports = app;
