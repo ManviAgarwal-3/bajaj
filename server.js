@@ -79,10 +79,10 @@ app.post('/bfhl', (req, res) => {
     }
 
     // Fixed user details (as per assignment spec)
-    const full_name = "john_doe";
-    const dob = "17091999"; // example DOB, replace with yours
-    const email = "john@xyz.com";
-    const roll_number = "ABCD123";
+    const full_name = "Manvi_Agarwal";
+    const dob = "03112004"; // example DOB, replace with yours
+    const email = "manvi.agarwal2022@vitstudent.ac.in";
+    const roll_number = "22BRS1015";
 
     const user_id = `${full_name}_${dob}`;
 
