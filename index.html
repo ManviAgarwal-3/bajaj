@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BFHL API Tester</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    input, textarea, button { margin: 0.5rem 0; width: 100%; padding: 8px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h2>BFHL API Tester</h2>
+  <label>Enter JSON data (array inside "data"):</label>
+  <textarea id="inputData" rows="5">{"data": ["a","1","334","4","R","$"]}</textarea>
+  <button onclick="sendRequest()">Send to /bfhl</button>
+
+  <h3>Response:</h3>
+  <pre id="responseOutput">Click "Send" to see response</pre>
+
+  <script>
+    async function sendRequest() {
+      const input = document.getElementById("inputData").value;
+      try {
+        const res = await fetch("http://localhost:3000/bfhl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: input
+        });
+        const data = await res.json();
+        document.getElementById("responseOutput").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("responseOutput").textContent = "Error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>
